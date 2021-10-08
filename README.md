@@ -27,5 +27,5 @@
 
 
 ### Models
-Find previous models [here](https://drive.google.com/drive/folders/1Z-UTRqAauBXRbDDDtC_uCLNeBw6O5bY6?usp=sharing) or server(91)/tmp
+Find previous models [Google drive Model folder](https://drive.google.com/drive/folders/1Z-UTRqAauBXRbDDDtC_uCLNeBw6O5bY6?usp=sharing) or server(91)/tmp/3dloc_models
 

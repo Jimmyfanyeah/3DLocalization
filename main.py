@@ -178,7 +178,7 @@ if __name__ == '__main__':
     parser.add_argument('--training_data_path',       type=str,           default='/home/lingjia/Documents/microscope/Data/training_images_zrange20',     help='path for training and validation data')
     parser.add_argument('--result_path',              type=str,           default='/home/lingjia/Documents/microscope/Results',            help='path for save models')
     parser.add_argument('--post_pro',              type=int,           default=0, help='whether do post processing in dnn')
-    parser.add_argument('--model_use', type=str,)
+    parser.add_argument('--model_use',             type=str,           choices=['cnn','cnn_residual'])
     opt = parser.parse_args()
 
     opt.zmin = -opt.zmax
