@@ -7,12 +7,12 @@ L = 4; Nzones = 7; b = 5; [Nx,Ny,Nz] = size(A); Np = Nx;
 tic
 %% Modify parameters here
 save_pred_info = 0; % save pred_label.txt
-nSource = 25;
+nSource = 45;
 
 % mat_path = [' ',num2str(nSource)]; % path for test data
 % pred_path = ' '; % path for prediction
-mat_path = '/home/tonielook/rpsf/20211008/data_test/test25'; % path for test data
-pred_path = '/home/tonielook/rpsf/20211008/test_output/test25';
+mat_path = '/home/tonielook/rpsf/20211008/data_test/test45'; % path for test data
+pred_path = '/home/tonielook/rpsf/20211008/test_output/test45';
 save_path = pred_path;
 
 %% main
