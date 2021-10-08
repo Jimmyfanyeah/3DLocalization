@@ -3,13 +3,23 @@
 ## Description
 
 ### Code info
-* __utils/calc_metrics.py__: evaluate on original prediction (precision & recall)
-* __utils/cnn.py__: two network architecture, (1) LocalizationCNN (2) ResLocalizationCNN. Main difference: residual layer or not
-* __utils/data.py__: (1) ImagesDataset: used without forward loss (2) ImagesDataset_v2 & ImagesDataset_test: used with forward loss. Main difference: line 176-180, load 2d ground-truth image or not. Modify the choice in line 97-101
+- __utils/calc_metrics.py__: evaluate on original prediction (precision & recall)
+* __utils/cnn.py__: two network architecture. Main difference: residual layer or not
+    - LocalizationCNN
+    - ResLocalizationCNN
+* __utils/data.py__: build data generator. Main difference: line 176-180, load 2d ground-truth image or not. Modify the choice in line 97-101
+    - ImagesDataset: used without forward loss 
+    - ImagesDataset_v2 & ImagesDataset_test: used with forward loss. 
 * __utils/fft_conv.py__: use FFT to implement 3d convolution when calculating forward loss
-* __utils/helper.py__: some auxiliary functions. Fun ```buildModel``` (line 75-81) choice the model to use based on argument
-* __utils/loss.py__: loss functions include (1) dice (not use now) (2) regularization term: same as Chao's paper (3) mse3d: ||G*y^-G*y||^2 (4) mse2d (forward loss): ||A*y^-y||^2. A is 3D PSF matrix. The final criterion in calculate_loss_v2 (line 140)
-* __utils/postprocess.py__: (1) ```Postprocess```: cluster + thresh, same setting as DeepSTORM3D (2) ```Postprocess__v0```: store points with conf>0
+* __utils/helper.py__: some auxiliary functions. Function buildModel (line 75-81) choice the model to use based on argument
+* __utils/loss.py__: loss functions include 
+    - dice (not use now) 
+    - regularization term: same as Chao's paper 
+    - mse3d: ||G*y^-G*y||^2 
+    - mse2d (forward loss): ||A*y^-y||^2. A is 3D PSF matrix. The final criterion in calculate_loss_v2 (line 140)
+* __utils/postprocess.py__: post-processing / save test prediction
+    - Postprocess: cluster + thresh, same setting as DeepSTORM3D
+    - Postprocess__v0: store points with conf>0
 * __utils/test_model.py__: test
 * __utils/train_model.py__: train
 * __utils/lr_find.py__: find suitbal initial learning rate
