@@ -7,17 +7,18 @@ L = 4; Nzones = 7; b = 5; [Nx,Ny,Nz] = size(A); Np = Nx;
 tic
 %% Modify parameters here
 save_pred_info = 0; % save pred_label.txt
-nSource = 30;
+nSource = 25;
 
-mat_path = [' ',num2str(nSource)]; % path for test data
-pred_path = ' '; % path for prediction
-pred_path = [pred_path,'\test',num2str(nSource)];
+% mat_path = [' ',num2str(nSource)]; % path for test data
+% pred_path = ' '; % path for prediction
+mat_path = '/home/tonielook/rpsf/20211008/data_test/test25'; % path for test data
+pred_path = '/home/tonielook/rpsf/20211008/test_output/test25';
 save_path = pred_path;
 
 %% main
-pred = readtable([pred_path,'\loc.csv']);
+pred = readtable([pred_path,'/loc.csv']);
 pred = table2array(pred);
-gt = readtable([pred_path,'\label.txt']);
+gt = readtable([pred_path,'/label.txt']);
 gt = table2array(gt(:,1:5));
 
 % evaluation metrics
@@ -30,7 +31,7 @@ flux_all = [];
 
 if save_pred_info
     % pred_label: pred 3d locations + flux estimated from var/dnn
-    label = fopen([save_path,'\pred_label.txt'],'w');
+    label = fopen([save_path,'/pred_label.txt'],'w');
 end
 
 for nt = 1:50
@@ -80,7 +81,7 @@ for nt = 1:50
     flux_est_dnn = xIt(idx_est);
     
     % Estimate flux value
-    load([mat_path,'\im',num2str(nt),'.mat']);  % mat file for g
+    load([mat_path,'/im',num2str(nt),'.mat']);  % mat file for g
     flux_est_var = Iter_flux(A, idx_est, g, b);
 
     %% Evaluation
@@ -97,10 +98,10 @@ for nt = 1:50
     jaccard_index(nt) = ji;
     f1_score(nt) = f1;
    
-    fprintf('TP = %d, P = %d, Target = %d\n',num_tr,num_est,num_nonz);    
+%     fprintf('TP = %d, P = %d, Target = %d\n',num_tr,num_pred,num_nonz);    
     fprintf('%d\n',nt)
     fprintf('%d point source case\n',nSource);
-    fprintf('Recall = %3.2f%%\n',recall_tmp(nt)*100);
+    fprintf('Recall = %3.2f%%\n',recall(nt)*100);
     fprintf('Precision = %3.2f%%\n',precision(nt)*100);
     fprintf('---\n');
     
@@ -126,7 +127,7 @@ if save_pred_info
     fclose(label);
     % save precision and recall into csv
     ex = [[1:1:50]',precision,recall,jaccard_index,f1_score];
-    writematrix(ex,[save_path,'\eval.csv']);
+    writematrix(ex,[save_path,'/eval.csv']);
 end
 
 %% plot the 3D estimation (compare ground true with estimated solution)

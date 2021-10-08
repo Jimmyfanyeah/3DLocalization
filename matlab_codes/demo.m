@@ -6,29 +6,34 @@ Nzones = 7; % no. of zones in the circular imaging aperture = #L
 Np = 96;
 
 %% Modify path and params
-Ntest  = [0,1];
+% Ntest  = [0,1];
+Ntest  = [1,50];
 
-base_path = ''; % save path
-train_path = [base_path,'\train\'];  % path to save train images with noise
-clean_path = [base_path,'\clean\']; % path to save noiseless ground truth images
+base_path = '/home/tonielook/rpsf/20211008/data_test/test45/'; % save path
+% train_path = [base_path,'train/'];  % path to save train images with noise
+% clean_path = [base_path,'clean/']; % path to save noiseless ground truth images
+train_path = base_path;  % path to save train images with noise
+clean_path = base_path; % path to save noiseless ground truth images
 if ~exist(train_path, 'dir') || ~exist(clean_path, 'dir')
    mkdir(train_path)
    mkdir(clean_path)
 end
 
-% nSource is a random value uniformly distributed in [1,40]
+% nSource is a ranbudom value uniformly distributed in [1,40]
 rng(1024);
-all_nSource = randi([1,40],[Ntest(2),1]);
+    nSource = 45;
+% all_nSource = randi([1,40],[Ntest(2),1]);
+all_nSource = [];
 all_photon = [];
 all_flux = [];
 all_depth = [];
 all_overlap = [];
 
 %% generate images
-label_file = fopen([train_path,'\label.txt'],'w');
-for ii = Ntest(1):Ntest(2)-1
+label_file = fopen([train_path,'label.txt'],'w');
+for ii = Ntest(1):Ntest(2)
     rng(ii);
-    nSource = all_nSource(ii+1);
+%     nSource = all_nSource(ii+1);
     overlap_pts = min(randi([1,4]),floor(nSource/2));
     all_overlap = [all_overlap,overlap_pts];
 
@@ -41,7 +46,7 @@ for ii = Ntest(1):Ntest(2)-1
         while length(Xp_true) < nSource
             a = Xp_true(jj)+(rand(1)-0.5)*4;
             b = Yp_true(jj)+(rand(1)-0.5)*4;
-            c = zeta_true(jj)+(rand(1)-0.5)*3;
+            c = zeta_true(jj)+(rand(1)-0.5)*5;
             if abs(a)<34 && abs(b)<34 && abs(c)<20 && 2<abs(zeta_true(jj)-c)
                 Xp_true = [Xp_true,a];
                 Yp_true = [Yp_true,b];
@@ -73,8 +78,8 @@ for ii = Ntest(1):Ntest(2)-1
     all_depth = [all_depth;zeta_true'];
 
     % save mat file
-    save([train_path,'\im',num2str(ii),'.mat'],'g');
-    save([clean_path,'\I',num2str(ii),'.mat'],'I0');
+    save([train_path,'im',num2str(ii),'.mat'],'g');
+    save([clean_path,'I',num2str(ii),'.mat'],'I0');
     disp([num2str(ii),' saved']);
     % save labels
     LABEL = [ii*ones(1,nSource); Yp_true; Xp_true; zeta_true; flux'];

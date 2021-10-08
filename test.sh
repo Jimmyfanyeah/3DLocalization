@@ -1,9 +1,8 @@
 set -x
 python3 main.py      --gpu_number='0' \
-    --checkpoint_path='/home/lingjia/Documents/3dloc_result/CNN_v2/0930-nTrain9000-lr0.0005-Epoch199-batchSize8-D250-cnn_residual/checkpoint_best_loss' \
-            --training_data_path='/home/lingjia/Documents/3dloc_data/test/test_v3/test40' \
-            --result_path='/home/lingjia/Documents/3dloc_result/CNN_v2/TestResult/1001_neumannbc/test40' \
-            --test_id_loc='/home/lingjia/Documents/3dloc_result/data/id1.txt' \
+    --checkpoint_path='/home/tonielook/rpsf/20211008/trained_model/0808-nTrain9000-lr0.0007-Epoch100-batchSize8-D250-cnn_residual/checkpoint_best_loss' \
+            --training_data_path='/home/tonielook/rpsf/20211008/data_test/test45' \
+            --result_path='/home/tonielook/rpsf/20211008/test_output/test45' \
             --model_use='cnn_residual'  \
             --post_pro=0  \
             --D=250  \
