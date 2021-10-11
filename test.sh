@@ -1,9 +1,9 @@
 set -x
 python3 main.py      --gpu_number='0' \
-    --checkpoint_path='/home/tonielook/rpsf/20211008/trained_model/0808-nTrain9000-lr0.0007-Epoch100-batchSize8-D250-cnn_residual/checkpoint_best_loss' \
-            --training_data_path='/home/tonielook/rpsf/20211008/data_test/test45' \
-            --result_path='/home/tonielook/rpsf/20211008/test_output/test45' \
-            --model_use='cnn_residual'  \
+    --checkpoint_path='/home/tonielook/rpsf/20211011_without_residual/trained_model/0620-nTrain9000-lr0.0007-Epoch200-batchSize7-D250/checkpoint_best_loss' \
+            --training_data_path='/home/tonielook/rpsf/20211011_without_residual/data_test/test25' \
+            --result_path='/home/tonielook/rpsf/20211011_without_residual/test_output/test25' \
+            --model_use='cnn'  \
             --post_pro=0  \
             --D=250  \
             --zmax=20  \

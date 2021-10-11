@@ -11,8 +11,8 @@ nSource = 25;
 
 % mat_path = [' ',num2str(nSource)]; % path for test data
 % pred_path = ' '; % path for prediction
-mat_path = '/home/tonielook/rpsf/20211008/data_test/test25/'; % path for test data
-pred_path = '/home/tonielook/rpsf/20211008/test_output/test25';
+mat_path = '/home/tonielook/rpsf/20211011_without_residual/data_test/test25'; % path for test data
+pred_path = '/home/tonielook/rpsf/20211011_without_residual/test_output/test25';
 save_path = pred_path;
 
 %% main
@@ -98,10 +98,10 @@ for nt = 1:50
     jaccard_index(nt) = ji;
     f1_score(nt) = f1;
    
-    fprintf('TP = %d, P = %d, Target = %d\n',num_tr,num_pred,num_nonz);    
+%     fprintf('TP = %d, P = %d, Target = %d\n',num_tr,num_pred,num_nonz);    
     fprintf('%d\n',nt)
     fprintf('%d point source case\n',nSource);
-    fprintf('Recall = %3.2f%%\n',recall_tmp(nt)*100);
+    fprintf('Recall = %3.2f%%\n',recall(nt)*100);
     fprintf('Precision = %3.2f%%\n',precision(nt)*100);
     fprintf('---\n');
     

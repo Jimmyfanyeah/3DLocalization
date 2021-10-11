@@ -1,3 +1,22 @@
+0808-nTrain9000-lr0.0007-Epoch100-batchSize8-D250-cnn_residual
+
 25 pts: mean_precision, mean_recall 0.878400000000000, 0.921387735308725
 35 pts: mean_precision, mean_recall 0.901247681200507, 0.888000000000000
 45 pts: mean_precision, mean_recall 0.872888888888889, 0.848030184681597
+
+0620-nTrain9000-lr0.0007-Epoch200-batchSize7-D250
+25 pts: mean_precision, mean_recall 0.917051627516424, 0.873600000000000
+35 pts: mean_precision, mean_recall 0.886720052366574, 0.881714285714286
+45 pts: mean_precision, mean_recall 0.844116391027736, 0.862222222222222
+
+0620-nTrain9000-lr0.0007-Epoch200-batchSize7-D250
+without 2 extra overlap points, flux uniform dist
+25 pts: mean_precision, mean_recall 0.903655676509882, 0.960800000000000 
+35 pts: mean_precision, mean_recall 0.863722411209915, 0.932571428571429
+45 pts: mean_precision, mean_recall 0.811177930445819, 0.913777777777778
+
+0620-nTrain9000-lr0.0007-Epoch200-batchSize7-D250
+without 2 extra overlap points, flux poiss dist
+25 pts: mean_precision, mean_recall 0.921994409949833, 0.976000000000000
+35 pts: mean_precision, mean_recall 0.884972240840503, 0.947428571428572
+45 pts: mean_precision, mean_recall 0.815925848295158, 0.932888888888889

@@ -11,8 +11,8 @@ nSource = 45;
 
 % mat_path = [' ',num2str(nSource)]; % path for test data
 % pred_path = ' '; % path for prediction
-mat_path = '/home/tonielook/rpsf/20211008/data_test/test45'; % path for test data
-pred_path = '/home/tonielook/rpsf/20211008/test_output/test45';
+mat_path = '/home/tonielook/rpsf/20211011_without_residual/data_test/test45'; % path for test data
+pred_path = '/home/tonielook/rpsf/20211011_without_residual/test_output/test45';
 save_path = pred_path;
 
 %% main

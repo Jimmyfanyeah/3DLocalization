@@ -9,7 +9,7 @@ nSource = 25;
 % fixed_flux_value = 110;
 
 % pred_path = folder save loc.csv
-pred_path = ['/home/tonielook/Documents/3dloc/Result/202107/test_result'];
+pred_path = '/home/tonielook/rpsf/20211011_without_residual/test_output/test25';
 
 
 pred = readtable([pred_path,'/loc.csv']);
@@ -75,7 +75,7 @@ for nt = 1:50
     [flux_new] = Iter_flux(A, idx_est, g, b);
 
     % Evaluation
-    [re, pr,flux_total, flux_est] = Eval_v2(xIt, interest_reg,flux_new,flux); 
+    [re, pr,flux_total, flux_est] = Eval_v2_202107(xIt, interest_reg,flux_new,flux); 
     % [re, pr] = Eval_v1(xIt, interest_reg); % for process without flux refinement
     recall(nt) = re;
     precision(nt) = pr;
