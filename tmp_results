@@ -24,5 +24,5 @@ without 2 extra overlap points, flux poiss dist
 0808-nTrain9000-lr0.0007-Epoch100-batchSize8-D250-cnn_residual
 without 2 extra overlap points, flux poiss dist
 25 pts: mean_precision, mean_recall 0.935038190401038, 0.976800000000000
-35 pts: mean_precision, mean_recall 0.889964649075828, 0.950857142857143
+35 pts: mean_precision, mean_recall 0.878451575679820, 0.954857142857143
 45 pts: mean_precision, mean_recall 0.828566379136856, 0.935111111111111
