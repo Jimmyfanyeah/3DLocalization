@@ -7,12 +7,12 @@ L = 4; Nzones = 7; b = 5; [Nx,Ny,Nz] = size(A); Np = Nx;
 tic
 %% Modify parameters here
 save_pred_info = 0; % save pred_label.txt
-nSource = 25;
+nSource = 35;
 
 % mat_path = [' ',num2str(nSource)]; % path for test data
 % pred_path = ' '; % path for prediction
-mat_path = '/home/tonielook/rpsf/20211012_matching_baseline/data_test/test25'; % path for test data
-pred_path = '/home/tonielook/rpsf/20211012_matching_baseline/test_output/test25';
+mat_path = '/home/tonielook/rpsf/20211014_exploring_single_image/data_test/test35'; % path for test data
+pred_path = '/home/tonielook/rpsf/20211014_exploring_single_image/test_output/test35';
 save_path = pred_path;
 
 %% main
@@ -34,7 +34,7 @@ if save_pred_info
     label = fopen([save_path,'/pred_label.txt'],'w');
 end
 
-for nt = 1:50
+for nt = 1:6
     %% Post-processing
     gt_tmp = gt(gt(:,1)==nt,:);
     pred_tmp = pred(pred(:,1)==nt,:);
@@ -136,17 +136,17 @@ end
 
 figure;
 % true positive - gt
-scatter3(Vtrue(tp_gt)+49,Vtrue(nSource+tp_gt)+49,(Vtrue(2*nSource+tp_gt)+21)/2.1+1,'ro')
+scatter3(Vtrue(tp_gt)+49,Vtrue(nSource+tp_gt)+49,(Vtrue(2*nSource+tp_gt)+21)/2.1+1,'ko')
 hold on
 % false negative - gt
 fn_gt = setxor(1:1:nSource,tp_gt);
-scatter3(Vtrue(fn_gt)+49,Vtrue(nSource+fn_gt)+49,(Vtrue(2*nSource+fn_gt)+21)/2.1+1,'r^')
+scatter3(Vtrue(fn_gt)+49,Vtrue(nSource+fn_gt)+49,(Vtrue(2*nSource+fn_gt)+21)/2.1+1,'ro')
 hold on
 % true positive - pred
-scatter3(loc_x_tp,loc_y_tp,loc_z_tp,'bx')
+scatter3(loc_x_tp,loc_y_tp,loc_z_tp,'k^')
 hold on
 % false positive - pred
-scatter3(loc_x_fp,loc_y_fp,loc_z_fp,'b^')
+scatter3(loc_x_fp,loc_y_fp,loc_z_fp,'r^')
 
 axis([1 96 1 96 0 21])
 legend('tp-gt','fn-gt','tp-p','fp-p','Location','Southoutside','Orientation','horizontal')
@@ -181,3 +181,6 @@ title(['img',num2str(nt)])
 % title(['# of pts ', num2str(nSource)]);
 % xlabel('relative error')
 % ylabel('# of pts')
+
+load ([mat_path,'/I6.mat'])
+imagesc(imrotate(flip(I0,2),90))

@@ -42,7 +42,7 @@ def GaussianKernel(shape=(7, 5, 5), sigma=1, normfactor=1):
 
 def PSF_matrix():
     # PSF_path = '/home/lingjia/Documents/3dloc/utils/data_natural_order_A.mat'
-    PSF_path = '/home/lingjia/Documents/3dloc/utils/A_41slices.mat'
+    PSF_path = './utils/A_41slices.mat'
     PSF_mat = scipy.io.loadmat(PSF_path)
     PSF_np = np.float32(PSF_mat['A'])
     PSF = torch.from_numpy(PSF_np).permute(2,0,1).unsqueeze(0).unsqueeze(0) # from [H,W,D] -> [1,1,D,H,W]

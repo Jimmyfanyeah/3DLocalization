@@ -9,7 +9,7 @@ Np = 96;
 % Ntest  = [0,1];
 Ntest  = [1,50];
 
-base_path = '/home/tonielook/rpsf/20211011_without_residual/data_test/test25/'; % save path
+base_path = '/home/tonielook/rpsf/20211014_exploring_single_image/data_test/test35/'; % save path
 % train_path = [base_path,'train/'];  % path to save train images with noise
 % clean_path = [base_path,'clean/']; % path to save noiseless ground truth images
 train_path = base_path;  % path to save train images with noise
@@ -20,8 +20,8 @@ if ~exist(train_path, 'dir') || ~exist(clean_path, 'dir')
 end
 
 % nSource is a ranbudom value uniformly distributed in [1,40]
-rng(1024);
-    nSource = 25;
+rng('shuffle');
+    nSource = 35;
 % all_nSource = randi([1,40],[Ntest(2),1]);
 all_nSource = [];
 all_photon = [];
@@ -32,7 +32,7 @@ all_overlap = [];
 %% generate images
 label_file = fopen([train_path,'label.txt'],'w');
 for ii = Ntest(1):Ntest(2)
-    rng(ii);
+    rng('shuffle');
 %     nSource = all_nSource(ii+1);
 %     overlap_pts = min(randi([1,4]),floor(nSource/2));
     overlap_pts = 0;
