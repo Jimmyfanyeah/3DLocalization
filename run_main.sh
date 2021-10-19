@@ -1,5 +1,5 @@
 set -x
-nohup python3 main.py           --gpu_number='2,3'  \
+nohup python3 main.py           --gpu_number='0,1'  \
                                 --zmax=20  \
                                 --D=250  \
                                 --clear_dist=1  \
@@ -12,10 +12,10 @@ nohup python3 main.py           --gpu_number='2,3'  \
                                 --saveEpoch=10  \
                                 --maxEpoch=190  \
                                 --train_or_test='train'  \
-                                --training_data_path='/home/lingjia/Documents/3dloc_data/train/0620_uniformFlux'  \
-                                --result_path='/home/lingjia/Documents/3dloc_result/CNN_v2'  \
+                                --training_data_path='../data_train'  \
+                                --result_path='../trained_model'  \
                                 --resume_training=0  \
                                 --checkpoint_path=''  \
                                 --model_use='cnn_residual'  \
-                                > /home/lingjia/Documents/3dloc_result/CNN_v2/log/0912.log 2>&1 &
+                                > ../trained_model/training_main_sh.log 2>&1 &
 set +x

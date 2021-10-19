@@ -162,8 +162,8 @@ class ImagesDataset_v2(Dataset):
     def __getitem__(self, index):
         ID = self.list_IDs[index]
 
-        im_name = os.path.join(self.root_dir,'train','im' + ID + '.mat')
-        im_mat = scipy.io.loadmat(im_name)
+        im_name = os.path.join(self.root_dir,'train','im' + ID)# + '.mat')
+        im_mat = scipy.io.loadmat(im_name,appendmat=True)
         im_np = np.float32(im_mat['g'])
 
         # turn image into torch tensor with 1 channel
@@ -174,7 +174,7 @@ class ImagesDataset_v2(Dataset):
         bool_grid = batch_xyz_to_boolean_grid(xyz_np, self.setup_params)
 
         # target 2d image without noise
-        gtimg_name = os.path.join(self.root_dir,'noiseless','noiseless' + ID + '.mat')
+        gtimg_name = os.path.join(self.root_dir,'clean','I' + ID + '.mat')
         gtimg_mat = scipy.io.loadmat(gtimg_name)
         gtimg_np = np.float32(gtimg_mat['I0'])
         gtimg_tensor = torch.from_numpy(gtimg_np)
