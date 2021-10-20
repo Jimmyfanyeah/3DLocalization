@@ -7,12 +7,12 @@ L = 4; Nzones = 7; b = 5; [Nx,Ny,Nz] = size(A); Np = Nx;
 tic
 %% Modify parameters here
 save_pred_info = 0; % save pred_label.txt
-nSource = 35;
+nSource = 20;
 
 % mat_path = [' ',num2str(nSource)]; % path for test data
 % pred_path = ' '; % path for prediction
-mat_path = '/home/tonielook/rpsf/20211014_exploring_single_image/data_test/test35'; % path for test data
-pred_path = '/home/tonielook/rpsf/20211014_exploring_single_image/test_output/test35';
+mat_path = ['/home/tonielook/rpsf/20211019_start_training/data_test/test',num2str(nSource)]; % path for test data
+pred_path = ['/home/tonielook/rpsf/20211019_start_training/test_output/test',num2str(nSource)];
 save_path = pred_path;
 
 %% main
@@ -34,7 +34,7 @@ if save_pred_info
     label = fopen([save_path,'/pred_label.txt'],'w');
 end
 
-for nt = 1:6
+for nt = 1:50
     %% Post-processing
     gt_tmp = gt(gt(:,1)==nt,:);
     pred_tmp = pred(pred(:,1)==nt,:);
@@ -182,5 +182,5 @@ title(['img',num2str(nt)])
 % xlabel('relative error')
 % ylabel('# of pts')
 
-load ([mat_path,'/I6.mat'])
+load ([mat_path,'/I50.mat'])
 imagesc(imrotate(flip(I0,2),90))
