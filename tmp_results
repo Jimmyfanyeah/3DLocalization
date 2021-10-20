@@ -1,28 +1,31 @@
-0808-nTrain9000-lr0.0007-Epoch100-batchSize8-D250-cnn_residual
+model, description, pts, mean_precision, mean_recall
 
-25 pts: mean_precision, mean_recall 0.878400000000000, 0.921387735308725
-35 pts: mean_precision, mean_recall 0.901247681200507, 0.888000000000000
-45 pts: mean_precision, mean_recall 0.872888888888889, 0.848030184681597
+0808-nTrain9000-lr0.0007-Epoch100-batchSize8-D250-cnn_residual, with 2 extra overlaps and uniform flux, 25, 0.878400000000000, 0.921387735308725
+0808-nTrain9000-lr0.0007-Epoch100-batchSize8-D250-cnn_residual, with 2 extra overlaps and uniform flux, 35, 0.901247681200507, 0.888000000000000
+0808-nTrain9000-lr0.0007-Epoch100-batchSize8-D250-cnn_residual, with 2 extra overlaps and uniform flux, 45, 0.872888888888889, 0.848030184681597
 
-0620-nTrain9000-lr0.0007-Epoch200-batchSize7-D250
-25 pts: mean_precision, mean_recall 0.917051627516424, 0.873600000000000
-35 pts: mean_precision, mean_recall 0.886720052366574, 0.881714285714286
-45 pts: mean_precision, mean_recall 0.844116391027736, 0.862222222222222
+0620-nTrain9000-lr0.0007-Epoch200-batchSize7-D250, with 2 extra overlaps and uniform flux, 25, 0.917051627516424, 0.873600000000000
+0620-nTrain9000-lr0.0007-Epoch200-batchSize7-D250, with 2 extra overlaps and uniform flux, 35, 0.886720052366574, 0.881714285714286
+0620-nTrain9000-lr0.0007-Epoch200-batchSize7-D250, with 2 extra overlaps and uniform flux, 45, 0.844116391027736, 0.862222222222222
 
-0620-nTrain9000-lr0.0007-Epoch200-batchSize7-D250
-without 2 extra overlap points, flux uniform dist
-25 pts: mean_precision, mean_recall 0.903655676509882, 0.960800000000000 
-35 pts: mean_precision, mean_recall 0.863722411209915, 0.932571428571429
-45 pts: mean_precision, mean_recall 0.811177930445819, 0.913777777777778
+0620-nTrain9000-lr0.0007-Epoch200-batchSize7-D250, without 2 extra overlap pts and uniform flux, 25, 0.903655676509882, 0.960800000000000 
+0620-nTrain9000-lr0.0007-Epoch200-batchSize7-D250, without 2 extra overlap pts and uniform flux, 35, 0.863722411209915, 0.932571428571429
+0620-nTrain9000-lr0.0007-Epoch200-batchSize7-D250, without 2 extra overlap pts and uniform flux, 45, 0.811177930445819, 0.913777777777778
 
-0620-nTrain9000-lr0.0007-Epoch200-batchSize7-D250
-without 2 extra overlap points, flux poiss dist
-25 pts: mean_precision, mean_recall 0.921994409949833, 0.976000000000000
-35 pts: mean_precision, mean_recall 0.884972240840503, 0.947428571428572
-45 pts: mean_precision, mean_recall 0.815925848295158, 0.932888888888889
+0620-nTrain9000-lr0.0007-Epoch200-batchSize7-D250, without 2 extra overlap pts and poiss flux, 25, 0.921994409949833, 0.976000000000000
+0620-nTrain9000-lr0.0007-Epoch200-batchSize7-D250, without 2 extra overlap pts and poiss flux, 35, 0.884972240840503, 0.947428571428572
+0620-nTrain9000-lr0.0007-Epoch200-batchSize7-D250, without 2 extra overlap pts and poiss flux, 45, 0.815925848295158, 0.932888888888889
 
-0808-nTrain9000-lr0.0007-Epoch100-batchSize8-D250-cnn_residual
-without 2 extra overlap points, flux poiss dist
-25 pts: mean_precision, mean_recall 0.935038190401038, 0.976800000000000
-35 pts: mean_precision, mean_recall 0.878451575679820, 0.954857142857143
-45 pts: mean_precision, mean_recall 0.828566379136856, 0.935111111111111
+0808-nTrain9000-lr0.0007-Epoch100-batchSize8-D250-cnn_residual, without extra overlaps and poiss flux, 25, 0.935038190401038, 0.976800000000000
+0808-nTrain9000-lr0.0007-Epoch100-batchSize8-D250-cnn_residual, without extra overlaps and poiss flux, 35, 0.878451575679820, 0.954857142857143
+0808-nTrain9000-lr0.0007-Epoch100-batchSize8-D250-cnn_residual, without extra overlaps and poiss flux, 45, 0.828566379136856, 0.935111111111111
+
+1019-nTrain8999-lr0.0005-Epoch190-batchSize8-D250-cnn_residual, training with 10000x 40pts imgs, 5,  0.993333333333333, 1
+1019-nTrain8999-lr0.0005-Epoch190-batchSize8-D250-cnn_residual, training with 10000x 40pts imgs, 10, 0.970233100233100, 1
+1019-nTrain8999-lr0.0005-Epoch190-batchSize8-D250-cnn_residual, training with 10000x 40pts imgs, 15, 0.970524509803922, 0.993333333333333
+1019-nTrain8999-lr0.0005-Epoch190-batchSize8-D250-cnn_residual, training with 10000x 40pts imgs, 20, 0.945957462827028, 0.979000000000000
+1019-nTrain8999-lr0.0005-Epoch190-batchSize8-D250-cnn_residual, training with 10000x 40pts imgs, 25, 0.939453192695472, 0.980000000000000
+1019-nTrain8999-lr0.0005-Epoch190-batchSize8-D250-cnn_residual, training with 10000x 40pts imgs, 30, 0.931019851549681, 0.963333333333333
+1019-nTrain8999-lr0.0005-Epoch190-batchSize8-D250-cnn_residual, training with 10000x 40pts imgs, 35, 0.903143125545363, 0.960000000000000
+1019-nTrain8999-lr0.0005-Epoch190-batchSize8-D250-cnn_residual, training with 10000x 40pts imgs, 40, 0.896796024697081, 0.945500000000000
+1019-nTrain8999-lr0.0005-Epoch190-batchSize8-D250-cnn_residual, training with 10000x 40pts imgs, 45, 0.867005868882283, 0.939111111111111
