@@ -162,8 +162,8 @@ class ImagesDataset_v2(Dataset):
     def __getitem__(self, index):
         ID = self.list_IDs[index]
 
-        im_name = os.path.join(self.root_dir,'train','im' + ID)# + '.mat')
-        im_mat = scipy.io.loadmat(im_name,appendmat=True)
+        im_name = os.path.join(self.root_dir,'train','im' + ID + '.mat')
+        im_mat = scipy.io.loadmat(im_name)
         im_np = np.float32(im_mat['g'])
 
         # turn image into torch tensor with 1 channel

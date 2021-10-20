@@ -25,7 +25,7 @@ def learn_localization(rank,world_size,opt,setup_params):
     if opt.train_or_test == 'train':
         # split data to train and validation set
         tmp_train = np.arange(1,9000,1).tolist() 
-        tmp_valid = np.arange(9000,10000,1).tolist()
+        tmp_valid = np.arange(9001,10000,1).tolist()
         train_IDs = [str(i) for i in tmp_train]
         valid_IDs = [str(i) for i in tmp_valid]
 

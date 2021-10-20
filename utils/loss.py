@@ -159,7 +159,8 @@ class calculate_loss_v2(nn.Module):
 
         # final loss
         # loss = mse3d + mse2d/1e5 + reg
-        loss = mse3d + mse2d/1e5
+        # loss = mse3d + mse2d/1e5
+        loss = mse3d
 
         # record loss this iter and total loss
         metric['dice'] = dice.data.cpu().numpy()
