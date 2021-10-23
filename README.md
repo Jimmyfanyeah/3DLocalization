@@ -1,31 +1,49 @@
 # 3D Localization of Point Sources
 
 ## Description
+Following parts,
+* Data info
+* Network architecture
+* Loss function
+* Other info
 
-### Code info
-- __utils/calc_metrics.py__: evaluate on original prediction (precision & recall)
-* __utils/cnn.py__: two network architecture. Main difference: residual layer or not
-    - LocalizationCNN
-    - ResLocalizationCNN
-* __utils/data.py__: build data generator. Main difference: line 176-180, load 2d ground-truth image or not. Modify the choice in line 97-101
-    - ImagesDataset: used without forward loss 
-    - ImagesDataset_v2 & ImagesDataset_test: used with forward loss. 
-* __utils/fft_conv.py__: use FFT to implement 3d convolution when calculating forward loss
-* __utils/helper.py__: some auxiliary functions. Function buildModel (line 75-81) choice the model to use based on argument
-* __utils/loss.py__: loss functions include 
-    - dice (not use now) 
-    - regularization term: same as Chao's paper 
-    - mse3d: ||G*y^-G*y||^2 
-    - mse2d (forward loss): ||A*y^-y||^2. A is 3D PSF matrix. The final criterion in calculate_loss_v2 (line 140)
-* __utils/postprocess.py__: post-processing / save test prediction
-    - Postprocess: cluster + thresh, same setting as DeepSTORM3D
-    - Postprocess__v0: store points with conf>0
-* __utils/test_model.py__: test
-* __utils/train_model.py__: train
-* __utils/lr_find.py__: find suitbal initial learning rate
-* __utils/main.py__: main part
+## Data Info
+* Input: 2D image with size 96X96
+* Labels (ground-truth): 3D coordinates. 3D coordinates will be put into 3D grid and the value of that entry equals 1 (show existence) or flux value (also consider flux information) 
+
+## Network Architecture
+
+### Now
+* cnn_residual
+* cnn (initial cnn)
+
+### Attempts before
+* Initial cnn: DeepSTORM3D + dropout  
+* cnn_no_dialte (0721): cnn without dilated conv layers, remove dilation rate `[2,4,8,16]`  
+* cnn_ReLU (0808): `LeakyReLU` -> `ReLU`  
+* cnn_concatIM (0808): remove features `torch.cat((out, im),1)`, which concatenate output of layers with original input image, used in DeepSTORM3D,
+* cnn_residual (0808): the difference with concatIM as below,
+    * `out = layer(out) + out` -> residual conv layer  
+    * deconv1 and deconv2 layers with `+out` or not  
+* cnn_duc (0808): more than 1 version
+    * Loc3dResCNN: interpolate -> duc with aspp 
+    * ResLocalizationCNN_DUC (0809): interpolate -> duc with plain conv, without leakyReLU and BN 
+    * ResLocalizationCNN_DUC_v2 (0809): interpolate -> last layer duc 
+* cnn_hdc (0810): more than 1 version  
+    * ResLocalizationCNN_HDC: dilation `[1,1,2,4,8,16] -> [1,1,2,5,9,17]`
+    * ResLocalizationCNN_HDC_v2 (v2): dilation changes `[1,1,2,4,8,16] -> 1,[1,2,5,9,17]*2`
 
 
-### Models
-Find previous models [Google drive Model folder](https://drive.google.com/drive/folders/1Z-UTRqAauBXRbDDDtC_uCLNeBw6O5bY6?usp=sharing) or server(91)/tmp/3dloc_models
+## Loss function  
+* MSE3D: Loss between output and ground-truth tensor. Entry values represent confidence or flux value. $MSE3D = ||G\otimes\hat y - G\otimes\hat y||^2$
+* Dice loss: Dice loss only cares about the existence. $Dice=\frac{2|y\cap\hat y|}{|y|+|\hat y|}$
+* Forward loss (0817): New fidelity term evaluate difference on 2D image, $Forward=||A\otimes\hat y-I_0||^2$. $A$ is the discrete 3D PSF matrix, $I_0$ is 2d observed image.
+* Implementation of forward loss (0830): Implement forward loss (new fidelity term) by fft, details can be found in [GitHub](https://github.com/fkodom/fft-conv-pytorch) and [ZhiHu](https://zhuanlan.zhihu.com/p/300603589).
+* Implementation of forward loss (0930): Implement fft with Neumann boundary condition, refered to [paper](https://epubs.siam.org/doi/pdf/10.1137/S1064827598341384).
 
+
+## Other info
+* [ReadME template](https://gist.github.com/DomPizzie/7a5ff55ffa9081f2de27c315f5018afc)
+
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=default"></script>

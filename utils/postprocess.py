@@ -8,20 +8,23 @@ from torch.nn.functional import conv3d
 def tensor_to_np(x):
     return np.squeeze(x.cpu().numpy())
 
+
 # post-processing on GPU: thresholding and local maxima finding
 class Postprocess(Module):
-    def __init__(self, thresh, radius, setup_params):
+    def __init__(self, opt):
         super().__init__()
-        self.thresh = thresh
-        self.r = radius
-        self.device = setup_params['device']
-        self.psize_xy = 1/setup_params['upsampling_factor']
-        self.psize_z = setup_params['pixel_size_axial']
-        self.zmin = setup_params['zmin']
+        self.postpro = opt.postpro
+        self.device = opt.device
+        self.psize_xy = 1/opt.upsampling_factor
+        self.psize_z = opt.pixel_size_axial
+        self.zmin = opt.zeta[0]
         self.upsampling_shift = 0  # 2 due to floor(W/2) affected by upsampling factor of 4
         self.maxpool = MaxPool3d(kernel_size=2*self.r + 1, stride=1, padding=self.r)
         self.pad = ConstantPad3d(self.r, 0.0)
         self.zero = torch.FloatTensor([0.0]).to(self.device)
+        if self.postpro:
+            self.thresh = opt.postpro_params['thresh']
+            self.r = opt.postpro_params['radius']
 
         # construct the local average filters
         # filt_vec = np.arange(-self.r, self.r + 1)
@@ -33,12 +36,11 @@ class Postprocess(Module):
         sfilter = torch.ones_like(xfilter)
         self.local_filter = torch.cat((sfilter, xfilter, yfilter, zfilter), 0).to(self.device)
 
-    def local_avg(self, xbool, ybool, zbool, pred_vol_pad, num_pts, device):
 
+    def local_avg(self, xbool, ybool, zbool, pred_vol_pad, num_pts, device):
         # create the concatenated tensor of all local volumes
         pred_vol_all = torch.zeros(num_pts, 1, self.r*2 + 1, self.r*2 + 1, self.r*2 + 1).to(device)
         for pt in range(num_pts):
-
             # local 3D volume
             xpt = [xbool[pt], xbool[pt] + 2 * self.r + 1]
             ypt = [ybool[pt], ybool[pt] + 2 * self.r + 1]
@@ -55,16 +57,11 @@ class Postprocess(Module):
 
         return xloc, yloc, zloc
 
-    def forward(self, pred_vol):
 
-        # check size of the prediction and expand it accordingly to be 5D
-        num_dims = len(pred_vol.size())
-        if np.not_equal(num_dims, 5):
-            if num_dims == 4:
-                pred_vol = pred_vol.unsqueeze(0)
-            else:
-                pred_vol = pred_vol.unsqueeze(0)
-                pred_vol = pred_vol.unsqueeze(0)
+    def postpro_implement(self, pred_vol):
+        # check size of the prediction
+        if np.not_equal(len(pred_vol.size()), 5):
+            print(f'Expected a tensor with dimension=5, but got tensor with size {pred_vol.size()}')
 
         # apply the threshold
         pred_thresh = torch.where(pred_vol > self.thresh, pred_vol, self.zero)
@@ -85,7 +82,6 @@ class Postprocess(Module):
             xyz_bool = None
 
         else:
-
             # pad the result with radius_px 0's for average calc.
             pred_vol_pad = self.pad(pred_vol)
 
@@ -115,27 +111,11 @@ class Postprocess(Module):
 
         return xyz_rec, conf_rec, xyz_bool
 
-# only restore those points with conf>0
-class Postprocess_v0(Module):
-    def __init__(self, setup_params):
-        super().__init__()
-        self.device = setup_params['device']
-        self.psize_xy = 1/setup_params['upsampling_factor']
-        self.psize_z = setup_params['pixel_size_axial']
-        self.zmin = setup_params['zmin']
-        self.zero = torch.FloatTensor([0.0]).to(self.device)
 
-    def forward(self, pred_vol):
-
+    def no_postpro_implement(self, pred_vol):
         # check size of the prediction and expand it accordingly to be 5D, [batchSize, channel, D, H, W]
-        num_dims = len(pred_vol.size())
-        if num_dims == 4:
-                pred_vol = pred_vol.unsqueeze(0)
-        elif num_dims ==3 :
-            pred_vol = pred_vol.unsqueeze(0)
-            pred_vol = pred_vol.unsqueeze(0)
-        else:
-            print(f'dim of pred_vol should be 5, but got {num_dims}')
+        if np.not_equal(len(pred_vol.size()), 5):
+            print(f'Expected a tensor with dimension=5, but got tensor with size {pred_vol.size()}')
 
         # apply the threshold
         pred_thresh = torch.where(pred_vol > self.zero, pred_vol, self.zero)
@@ -171,3 +151,13 @@ class Postprocess_v0(Module):
             conf_rec = tensor_to_np(conf_rec)
 
         return xyz_rec, conf_rec, xyz_bool
+
+
+    def forward(self, pred_vol):
+        if self.postpro:
+            xyz_rec, conf_rec, xyz_bool = self.postpro_implement(pred_vol)
+        else:
+            xyz_rec, conf_rec, xyz_bool = self.no_postpro_implement(pred_vol)
+
+        return xyz_rec, conf_rec, xyz_bool
+

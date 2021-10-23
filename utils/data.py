@@ -1,24 +1,71 @@
-# Import modules and libraries
-import torch
-from torch.utils.data import Dataset
+# oficial modules
+import os
 import numpy as np
 import scipy.io
-from torch.utils.data import DataLoader
+import torch
+from torch.utils.data import Dataset, DataLoader
 from torch.utils.data.distributed import DistributedSampler as Disample
-import os
 
 
-# converts continuous xyz locations to a boolean grid
-def batch_xyz_to_boolean_grid(xyz_np, setup_params):
+def dataloader(data_path, labels, params, opt, num_workers=0):
+    # dataset = ImagesDataset(data_path, params['partition'], labels, opt)
+    dataset = ImagesDataset_v2(data_path, params['partition'], labels, opt)
 
-    upsampling_factor = setup_params['upsampling_factor']
-    pixel_size_axial = setup_params['pixel_size_axial']
+    batch_size = params['batch_size']
+    shuffle = params['shuffle']
+
+    try:
+        Sampler = Disample(dataset,num_replicas=opt.world_size,rank=opt.rank,shuffle=shuffle)
+        dl = DataLoader(dataset,batch_size=batch_size,sampler=Sampler,num_workers=num_workers,pin_memory=True)
+    except:
+        dl = DataLoader(dataset,batch_size=batch_size,shuffle=shuffle,num_workers=num_workers,pin_memory=True)
+    return dl
+
+
+class ImagesDataset_v2(Dataset):
+    # v2 with ground truth 2d image
+    def __init__(self, root_dir, list_IDs, labels, opt):
+        self.root_dir = root_dir
+        self.list_IDs = list_IDs
+        self.labels = labels
+        self.opt = opt
+
+    def __len__(self):
+        return len(self.list_IDs)
+
+    def __getitem__(self, index):
+        ID = self.list_IDs[index]
+
+        im_name = os.path.join(self.root_dir,'observed','im' + ID + '.mat')
+        im_mat = scipy.io.loadmat(im_name)
+        im_np = np.float32(im_mat['g'])
+
+        # turn image into torch tensor with 1 channel
+        im_tensor = torch.from_numpy(im_np).unsqueeze(0) # [1,96,96]
+
+        # corresponding xyz labels turned to a boolean tensor
+        xyz_np = self.labels[ID]
+        bool_grid = batch_xyz_to_boolean_grid(xyz_np, self.opt)
+
+        # target 2d image without noise
+        gtimg_name = os.path.join(self.root_dir,'noiseless','im' + ID + '.mat')
+        gtimg_mat = scipy.io.loadmat(gtimg_name)
+        gtimg_np = np.float32(gtimg_mat['I0'])
+        gtimg_tensor = torch.from_numpy(gtimg_np)
+
+        return im_tensor, bool_grid, gtimg_tensor, ID
+
+
+def batch_xyz_to_boolean_grid(xyz_np, opt):
+    # converts continuous xyz locations to a boolean grid
+    upsampling_factor = opt.upsampling_factor
+    pixel_size_axial = opt.pixel_size_axial
 
     # current dimensions
-    H, W, D = setup_params['H'], setup_params['W'], setup_params['D']
+    H, W, D = opt.H, opt.W, opt.D
 
     # shift the z axis back to 0
-    zshift = xyz_np[:,:,2] - setup_params['zmin']
+    zshift = xyz_np[:,:,2] - opt.zeta[0]
     batch_size, num_particles = zshift.shape
 
     # project xyz locations on the grid and shift xy to the upper left corner
@@ -53,6 +100,8 @@ def batch_xyz_to_boolean_grid(xyz_np, setup_params):
     return boolean_grid
 
 
+
+############## NOT USE NOW ######################
 def batch_xyz_to_boolean_grid_v0(xyz_np, setup_params):
     # without upsample and D=21
 
@@ -92,25 +141,6 @@ def batch_xyz_to_boolean_grid_v0(xyz_np, setup_params):
     return boolean_grid
 
 
-def dataloader(path_train, labels, params, setup_params, opt, num_workers=0):
-
-    if opt.train_or_test == 'train':
-        # dataset = ImagesDataset(path_train, params['partition'], labels, setup_params)
-        dataset = ImagesDataset_v2(path_train, params['partition'], labels, setup_params)
-    else:
-        dataset = ImagesDataset_test(path_train, params['partition'], labels, setup_params)
-
-    batch_size = params['batch_size']
-    shuffle = params['shuffle']
-
-    try:
-        Sampler = Disample(dataset,num_replicas=opt.world_size,rank=opt.rank,shuffle=shuffle)
-        dl = DataLoader(dataset,batch_size=batch_size,sampler=Sampler,num_workers=num_workers,pin_memory=True)
-    except:
-        dl = DataLoader(dataset,batch_size=batch_size,shuffle=shuffle,num_workers=num_workers,pin_memory=True)
-    return dl
-
-
 # PSF images with corresponding xyz labels dataset
 class ImagesDataset(Dataset):
 
@@ -131,6 +161,7 @@ class ImagesDataset(Dataset):
 
         # select sample
         ID = self.list_IDs[index]
+        # print(ID)
 
         im_name = os.path.join(self.root_dir,'train','/im' + ID + '.mat')
         im_mat = scipy.io.loadmat(im_name)
@@ -147,71 +178,5 @@ class ImagesDataset(Dataset):
         return im_tensor, bool_grid, ID
 
 
-class ImagesDataset_v2(Dataset):
-    # v2 with noiseless 2d image
-    # initialization of the dataset
-    def __init__(self, root_dir, list_IDs, labels, setup_params):
-        self.root_dir = root_dir
-        self.list_IDs = list_IDs
-        self.labels = labels
-        self.setup_params = setup_params
-
-    def __len__(self):
-        return len(self.list_IDs)
-
-    def __getitem__(self, index):
-        ID = self.list_IDs[index]
-
-        im_name = os.path.join(self.root_dir,'train','im' + ID + '.mat')
-        im_mat = scipy.io.loadmat(im_name)
-        im_np = np.float32(im_mat['g'])
-
-        # turn image into torch tensor with 1 channel
-        im_tensor = torch.from_numpy(im_np).unsqueeze(0)
-
-        # corresponding xyz labels turned to a boolean tensor
-        xyz_np = self.labels[ID]
-        bool_grid = batch_xyz_to_boolean_grid(xyz_np, self.setup_params)
-
-        # target 2d image without noise
-        gtimg_name = os.path.join(self.root_dir,'noiseless','noiseless' + ID + '.mat')
-        gtimg_mat = scipy.io.loadmat(gtimg_name)
-        gtimg_np = np.float32(gtimg_mat['I0'])
-        gtimg_tensor = torch.from_numpy(gtimg_np)
-
-        return im_tensor, bool_grid, gtimg_tensor, ID
 
 
-class ImagesDataset_test(Dataset):
-    def __init__(self, root_dir, list_IDs, labels, setup_params):
-        self.root_dir = root_dir
-        self.list_IDs = list_IDs
-        self.labels = labels
-        self.setup_params = setup_params
-
-    def __len__(self):
-        return len(self.list_IDs)
-
-    def __getitem__(self, index):
-
-        ID = self.list_IDs[index]
-
-        im_name = os.path.join(self.root_dir,'im'+ID+'.mat')
-        im_mat = scipy.io.loadmat(im_name)
-        im_np = np.float32(im_mat['g'])
-
-        # turn image into torch tensor with 1 channel
-        # im_np = np.expand_dims(im_np, 0)
-        im_tensor = torch.from_numpy(im_np).unsqueeze(0)
-
-        # corresponding xyz labels turned to a boolean tensor
-        xyz_np = self.labels[ID]
-        bool_grid = batch_xyz_to_boolean_grid(xyz_np, self.setup_params)
-
-        # target 2d image without noise
-        gtimg_name = os.path.join(self.root_dir, 'I'+ID+'.mat')
-        gtimg_mat = scipy.io.loadmat(gtimg_name)
-        gtimg_np = np.float32(gtimg_mat['I0'])
-        gtimg_tensor = torch.from_numpy(gtimg_np)
-
-        return im_tensor, bool_grid, gtimg_tensor, ID
