@@ -1,21 +1,13 @@
 set -x
-nohup python3 main.py           --train_or_test='train'  \
-                                --gpu_number='0'  \
-                                --H=96  \
-                                --W=96  \
-                                --zeta=[-20,20]  \
-                                --clear_dist=0  \
-                                --D=250  \
-                                --scaling_factor=170  \
-                                --upsampling_factor=2  \
-                                --model_use='cnn_residual'  \
-                                --batch_size=8  \
-                                --initial_learning_rate=0.0005  \
-                                --lr_decay_per_epoch=3  \
-                                --lr_decay_factor=0.5  \
-                                --max_epoch=1  \
-                                --save_epoch=10  \
-                                --data_path='/home/lingjia/Documents/3dloc_data/train/0620_uniformFlux'  \
-                                --save_path='/home/lingjia/Documents/3dloc_result/CNN_v2'  \
-                                > /home/lingjia/Documents/3dloc_result/CNN_v2/log/1001.log 2>&1 &
+nohup python3 main.py           --device='cuda:3'  \
+                                --param_file='/home/lingjia/Documents/rPSF/NN/param_v2.yaml'  \
+                                --data_path_override='/media/hdd/rPSF_data/rPSF/train/0620_uniformFlux'  \
+                                --img_size_override=96 \
+                                > /home/lingjia/Documents/rPSF/log/decode_impl_v1.log 2>&1 &
 set +x
+
+
+# python3 main.py           --device='cuda:2' \
+#                           --param_file='/home/lingjia/Documents/rPSF/NN/param_v2.yaml'\
+#                           --data_path_override='/media/hdd/rPSF_data/rPSF/train/0620_uniformFlux'\
+#                           --img_size_override=96

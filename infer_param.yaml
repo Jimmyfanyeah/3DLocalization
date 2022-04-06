@@ -1,0 +1,10 @@
+Hardware:
+  device: 'cuda:0'
+  worker:
+Frames:
+  path: /media/hdd/rPSF_data/rPSF/test/test_v3/test40
+Model:
+  path: /media/hdd/rPSF_result/decode_impl/2022-04-04_13-49-57_user-WS-C621E-SAGE-Series/model_best.pt
+  param_path: /media/hdd/rPSF_result/decode_impl/2022-04-04_13-49-57_user-WS-C621E-SAGE-Series/param_run.yaml
+Output:
+  path: /media/hdd/rPSF_infer/decode_impl/model2_best/test40
