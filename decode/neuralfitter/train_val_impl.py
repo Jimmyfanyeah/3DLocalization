@@ -16,6 +16,8 @@ def train(model, optimizer, loss, dataloader, grad_rescale, grad_mod, epoch, dev
     tqdm_enum = tqdm(dataloader, total=len(dataloader), smoothing=0.,ncols=100)  # progress bar enumeration
     t0 = time.time()
     loss_epoch = MetricMeter()
+    loss_gmm_epoch = MetricMeter()
+    loss_bg_epoch = MetricMeter()
 
     """Actual Training"""
     for batch_num, (x, y_tar, weight) in enumerate(tqdm_enum):  # model input (x), target (yt), weights (w)
@@ -26,7 +28,7 @@ def train(model, optimizer, loss, dataloader, grad_rescale, grad_mod, epoch, dev
 
         """Ship the data to the correct device"""
         x, y_tar, weight = ship_device([x, y_tar, weight], device)
-        
+
         """Forward the data"""
         y_out = model(x)
 
@@ -52,13 +54,19 @@ def train(model, optimizer, loss, dataloader, grad_rescale, grad_mod, epoch, dev
 
         """Logging"""
         loss_mean, loss_cmp = loss.log(loss_val)  # compute individual loss components
+        loss_gmm = loss_cmp['gmm']
+        loss_bg = loss_cmp['bg']
         del loss_val
         loss_epoch.update(loss_mean)
+        loss_gmm_epoch.update(loss_gmm)
+        loss_bg_epoch.update(loss_bg)
         tqdm_enum.set_description(f"{epoch} Train Time:{t_batch:.2} Loss:{loss_mean:.3}")
 
         # t0 = time.time()
 
-    log_train_val_progress.log_train(loss_p_batch=loss_epoch.vals, loss_mean=loss_epoch.mean, logger=logger, step=epoch)
+    # log_train_val_progress.log_train(loss_p_batch=loss_epoch.vals, loss_mean=loss_epoch.mean, logger=logger, step=epoch)
+
+    log_train_val_progress.log_train(loss_p_batch=loss_epoch.vals, loss_mean=loss_epoch.mean, logger=logger, step=epoch,loss_gmm_mean=loss_gmm_epoch.mean,loss_bg_mean=loss_bg_epoch.mean)
 
     return loss_epoch.mean
 

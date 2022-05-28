@@ -370,11 +370,13 @@ import numpy
 class rPSFDataset(Dataset):
 
     def __init__(self, root_dir, list_IDs=None, label_path=None, n_max=100, tar_proc=None, img_shape=None):
+
         self.root_dir = root_dir
         self.list_IDs = list_IDs
         if self.list_IDs is None:
             self.list_IDs = [int(n.strip('im').strip('.mat')) for n in os.listdir(os.path.join(self.root_dir,'noise')) if 'im' in n]
             self.list_IDs.sort()
+            # print(self.list_IDs)
         # print(self.list_IDs)
         self.label_path = label_path if label_path is not None else os.path.join(root_dir,'label.txt')
         self.n_max = n_max
@@ -442,12 +444,13 @@ class rPSFDataset(Dataset):
 
         mask_tar[0, :n_emitter] = 1
         param_tar[0, :n_emitter, :] = tar
-        bg = torch.zeros(self.img_shape)
+        # bg = torch.zeros(self.img_shape)
+        bg = torch.ones(self.img_shape)*5
 
         mask_tar = mask_tar.squeeze()
         param_tar = param_tar.squeeze()
 
-        if self.tar_gen is not None:
+        if self.tar_proc is not None:
             # tar_emitter, bg_frame --> target = Tuple (param_tar, mask_tar, bg)
             target = self.tar_proc.forward(param_tar, mask_tar, bg)
             return target
@@ -463,7 +466,6 @@ class rPSFDataset(Dataset):
         # print(xyz.shape,frame_ix.shape,phot.shape)
 
         return EmitterSet(xyz=xyz.cpu(), frame_ix=frame_ix.cpu(), phot=phot.cpu(), bg=bg, xy_unit='px')
-
 
     def __getitem__(self, index):
         ID = self.list_IDs[index]
@@ -481,10 +483,10 @@ class rPSFDataset(Dataset):
         return frame, target, weight
 
 
-
 class rPSF_InferenceDataset(Dataset):
 
     def __init__(self, root_dir, list_IDs=None, img_shape=None):
+
         self.root_dir = root_dir
         self.list_IDs = list_IDs
         if self.list_IDs is None:

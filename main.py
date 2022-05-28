@@ -1,14 +1,11 @@
 import argparse
-from ast import List
 from cmath import inf
-import copy
 import datetime
 import os
 import shutil
 import socket
 import sys
 from pathlib import Path
-from typing import Tuple
 import numpy
 import time
 import torch
@@ -34,18 +31,12 @@ def parse_args():
     parser.add_argument('-p', '--param_file', default=None,
                         help='Specify your parameter file (.yml or .json).', type=str)
 
-    # parser.add_argument('-d', '--debug', default=False, action='store_true',
-    #                     help='Debug the specified parameter file. Will reduce ds size for example.')
-
     parser.add_argument('-w', '--num_worker_override',default=None,
                         help='Override the number of workers for the dataloaders.',
                         type=int)
 
     parser.add_argument('-n', '--no_log', default=False, action='store_true',
                         help='Set no log if you do not want to log the current run.')
-
-    # parser.add_argument('-l', '--log_folder', default=None,
-    #                     help='Specify the (parent) folder you want to log to. If rel-path, relative to DECODE root.')
 
     parser.add_argument('-c', '--log_comment', default=None,
                         help='Add a log_comment to the run.')
@@ -55,7 +46,6 @@ def parse_args():
 
     parser.add_argument('-is', '--img_size_override', default=None,
                         help='Override img size', type=int)
-
 
     args = parser.parse_args()
     return args
@@ -73,23 +63,11 @@ def live_engine_setup(args):
         no_log: disable logging
         log_folder: folder for logging (where tensorboard puts its stuff)
         log_comment: comment to the experiment
-
-    Args Test:
-        param_file = '/home/lingjia/Documents/rPSF/NN/params.yaml'
-        device_overwrite = 'cuda'
-        debug = False
-        num_worker_override = None
-        no_log = False
-        log_folder = '/home/lingjia/Documents/rPSF/log'
-        log_comment = None
     """
 
     """Load Parameters and back them up to the network output directory"""
     param_file = Path(args.param_file)
     param = decode.utils.param_io.ParamHandling().load_params(param_file)
-
-    # auto-set some parameters (will be stored in the backup copy)
-    # param = decode.utils.param_io.autoset_scaling(param)
 
     # add meta information - Meta=namespace(version='0.10.0'),
     param.Meta.version = decode.utils.bookkeeping.decode_state()
@@ -189,7 +167,6 @@ def live_engine_setup(args):
         first_epoch = 0
 
     best_val_loss = inf
-    best_epoch = 0
     for i in range(first_epoch, param.HyperParameter.epochs):
         logger.add_scalar('learning/learning_rate', optimizer.param_groups[0]['lr'], i)
 
@@ -283,7 +260,8 @@ def setup_trainer(logger, model_out, ckpt_path, device, param):
     # Small collection of optimisers
     optimizer_available = {
         'Adam': torch.optim.Adam,
-        'AdamW': torch.optim.AdamW
+        'AdamW': torch.optim.AdamW,
+        'SGD': torch.optim.SGD
     }
 
     optimizer = optimizer_available[param.HyperParameter.optimizer]
@@ -331,10 +309,14 @@ def setup_trainer(logger, model_out, ckpt_path, device, param):
                 bg_max=param.Scaling.bg_max)
         ])
 
+    train_IDs = numpy.arange(1,18001,1).tolist()
+    val_IDs = numpy.arange(18001,20001,1).tolist()
+    # train_IDs = numpy.arange(1,27001,1).tolist()
+    # val_IDs = numpy.arange(27001,30001,1).tolist()
+    # train_IDs = numpy.arange(0,9000,1).tolist()
+    # val_IDs = numpy.arange(9000,10000,1).tolist()
     # train_IDs = numpy.arange(1,9001,1).tolist()
     # val_IDs = numpy.arange(9001,10001,1).tolist()
-    train_IDs = numpy.arange(0,9000,1).tolist()
-    val_IDs = numpy.arange(9000,10000,1).tolist()
 
     train_ds = decode.neuralfitter.dataset.rPSFDataset(root_dir=param.InOut.data_path,
                                                        list_IDs=train_IDs, label_path=None, 
@@ -347,7 +329,7 @@ def setup_trainer(logger, model_out, ckpt_path, device, param):
                                                        n_max=param.HyperParameter.max_number_targets,
                                                        tar_proc=tar_proc,
                                                        img_shape=param.Simulation.img_size)
-    
+
     # print(test_ds.label_gen())
 
     """Set up post processor"""

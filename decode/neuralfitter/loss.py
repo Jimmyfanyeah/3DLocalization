@@ -164,8 +164,6 @@ class GaussianMMLoss(Loss):
             decode.generic.utils.frame_grid(img_shape, xextent, yextent)
         self.forward_safety = forward_safety
 
-
-
     def log(self, loss_val):
         return loss_val.mean().item(), {'gmm': loss_val[:, 0].mean().item(),
                                         'bg': loss_val[:, 1].mean().item()}
@@ -205,7 +203,6 @@ class GaussianMMLoss(Loss):
 
         Returns:
             torch.Tensor (size N x 1)
-
         """
 
         batch_size = pxyz_mu.size(0)

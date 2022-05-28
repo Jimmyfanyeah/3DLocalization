@@ -1,10 +1,11 @@
 Hardware:
-  device: 'cuda:0'
+  device: 'cuda:1'
   worker:
 Frames:
-  path: /media/hdd/rPSF_data/rPSF/test/test_v3/test40
+  path: /media/hdd/rPSF/data/plain/test/nonoverlap
+  # path: /media/hdd/rPSF/data/plain/test/test_plain
 Model:
-  path: /media/hdd/rPSF_result/decode_impl/2022-04-04_13-49-57_user-WS-C621E-SAGE-Series/model_best.pt
-  param_path: /media/hdd/rPSF_result/decode_impl/2022-04-04_13-49-57_user-WS-C621E-SAGE-Series/param_run.yaml
+  path: /media/hdd/rPSF/result/decode_impl/2022-05-25_22-24-18_user-WS-C621E-SAGE-Series_20k_nobg/model_best.pt
+  param_path: /media/hdd/rPSF/result/decode_impl/2022-05-25_22-24-18_user-WS-C621E-SAGE-Series_20k_nobg/param_run.yaml
 Output:
-  path: /media/hdd/rPSF_infer/decode_impl/model2_best/test40
+  path: /media/hdd/rPSF/infer/decode_impl_infer/05252224_test

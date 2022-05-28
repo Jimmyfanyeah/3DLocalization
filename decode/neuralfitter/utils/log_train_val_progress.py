@@ -136,9 +136,11 @@ def log_dists(tp, tp_match, pred, px_border, px_size, logger, step):
     logger.add_figure('dist/prob', f_prob, step)
 
 
-def log_train(*, loss_p_batch: (list, tuple), loss_mean: float, logger, step: int):
+def log_train(*, loss_p_batch:(list, tuple), loss_mean:float, logger, step:int, loss_gmm_mean:float, loss_bg_mean:float):
 
     logger.add_scalar('learning/train_ep', loss_mean, step)
+    logger.add_scalar('learning/train_gmm', loss_gmm_mean, step)
+    logger.add_scalar('learning/train_bg', loss_bg_mean, step)
 
     for i, loss_batch in enumerate(loss_p_batch):
         step_batch = step * len(loss_p_batch) + i
