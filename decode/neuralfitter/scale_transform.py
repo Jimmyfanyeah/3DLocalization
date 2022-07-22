@@ -293,30 +293,59 @@ class ParameterListRescale:
                    bg_max=param.Scaling.bg_max)
 
 
+class ParameterListRescale_var2:
+
+    def __init__(self, phot_max, z_max, bg_max):
+        self.phot_max = phot_max
+        self.z_max = z_max
+        self.bg_max = bg_max
+
+    def forward(self, x: torch.Tensor, mask1: torch.Tensor, mask2: torch.Tensor, bg: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+
+        if x.dim() not in (2, 3) or x.size(-1) != 4:
+            raise ValueError(f"Unsupported shape of input {x.size()}")
+
+        x = x.clone()
+        x[..., 0] = x[..., 0] / self.phot_max
+        x[..., 3] = x[..., 3] / self.z_max
+        bg = bg / self.bg_max
+
+        return x, mask1, mask2, bg
+
+    @classmethod
+    def parse(cls, param):
+        return cls(phot_max=param.Scaling.phot_max,
+                   z_max=param.Scaling.z_max,
+                   bg_max=param.Scaling.bg_max)
+
+
+
 class InverseParamListRescale(ParameterListRescale):
     """
     Rescale network output trained with GMM Loss.
     """
-
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
         Args:
             x: model output
-
         Returns:
             torch.Tensor (rescaled model output)
         """
 
-        if x.dim() != 4 or x.size(1) != 10:
+        if x.dim() != 4 or x.size(1) != 19:
             raise ValueError(f"Unsupported size of input {x.size()}")
 
         x = x.clone()
+        # num channels = 3
+        # p=0,1,2 phot=3,4,5 x=6,7,8 y=9,10,11 z=12,13,14 phot_sig=15,16,17 x_sig=18,19,20, y_sig=21,22,23, z_sig=24,25,26, bg=27
+        # num channels = 2
+        # p=0,1 phot=2,3 x=4,5 y=6,7 z=8,9 phot_sig=10,11 x_sig=12,13, y_sig=14,15, z_sig=16,17, bg=18
 
-        x[:, 1] *= self.phot_max
-        x[:, 5] *= self.phot_max  # sigma rescaling
+        x[:, 2:4] *= self.phot_max
+        x[:, 10:12] *= self.phot_max # sigma rescaling
 
-        x[:, 4] *= self.z_max
-        x[:, 8] *= self.z_max
+        x[:, 8:10] *= self.z_max
+        x[:, 16:18] *= self.z_max # sigma rescaling
         x[:, -1] *= self.bg_max
 
         return x

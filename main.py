@@ -1,15 +1,9 @@
-import argparse
+import argparse, datetime, numpy, os, shutil, sys, time
 from cmath import inf
-import datetime
-import os
-import shutil
 import socket
-import sys
 from pathlib import Path
-import numpy
-import time
 import torch
-
+# self-defined modules
 import decode.evaluation
 import decode.neuralfitter
 import decode.neuralfitter.coord_transform
@@ -20,6 +14,9 @@ import decode.utils
 from decode.neuralfitter.utils import log_train_val_progress
 from decode.utils.checkpoint import CheckPoint
 
+import sys
+f = open('../output_log/2_run_training_30k_pt50L5_decode_variant_v2_attempt1.log', 'a')
+sys.stdout = f
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Training Args')
@@ -47,7 +44,10 @@ def parse_args():
     parser.add_argument('-is', '--img_size_override', default=None,
                         help='Override img size', type=int)
 
+    # parser.add_argument('--num_multichannel', default=1, help='Number of channels for depth, ')
+
     args = parser.parse_args()
+    # args, _ = parser.parse_known_args()
     return args
 
 
@@ -74,8 +74,7 @@ def live_engine_setup(args):
 
     """Experiment ID"""
     if param.InOut.checkpoint_init is None:
-        experiment_id = datetime.datetime.now().strftime(
-            "%Y-%m-%d_%H-%M-%S") + '_' + socket.gethostname()
+        experiment_id = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
         from_ckpt = False
         if args.log_comment:
             experiment_id = experiment_id + '_' + args.log_comment
@@ -169,9 +168,7 @@ def live_engine_setup(args):
     best_val_loss = inf
     for i in range(first_epoch, param.HyperParameter.epochs):
         logger.add_scalar('learning/learning_rate', optimizer.param_groups[0]['lr'], i)
-
-        print(f'Epoch{i}')
-
+        # print(f'Epoch{i}')
         if i >= 1:
             _ = decode.neuralfitter.train_val_impl.train(
                 model=model,
@@ -240,11 +237,10 @@ def live_engine_setup(args):
     print("Training finished after reaching maximum number of epochs.")
 
 
-
 def setup_trainer(logger, model_out, ckpt_path, device, param):
     """Set model, optimiser, loss and schedulers"""
     models_available = {
-        'SigmaMUNet': decode.neuralfitter.models.SigmaMUNet,
+        'SigmaMUNet': decode.neuralfitter.models.SigmaMUNet_variant,
         'DoubleMUnet': decode.neuralfitter.models.model_param.DoubleMUnet,
         'SimpleSMLMNet': decode.neuralfitter.models.model_param.SimpleSMLMNet,
     }
@@ -301,22 +297,16 @@ def setup_trainer(logger, model_out, ckpt_path, device, param):
 
     """Setup Target generator consisting possibly multiple steps in a transformation sequence."""
     tar_proc = decode.neuralfitter.utils.processing.TransformSequence(
-        [
-            # param_tar --> phot/max, z/z_max, bg/bg_max
-            decode.neuralfitter.scale_transform.ParameterListRescale(
-                phot_max=param.Scaling.phot_max,
-                z_max=param.Scaling.z_max,
-                bg_max=param.Scaling.bg_max)
+        [# param_tar --> phot/max, z/z_max, bg/bg_max
+        decode.neuralfitter.scale_transform.ParameterListRescale(
+            phot_max=param.Scaling.phot_max,
+            z_max=param.Scaling.z_max,
+            bg_max=param.Scaling.bg_max)
         ])
 
-    train_IDs = numpy.arange(1,18001,1).tolist()
-    val_IDs = numpy.arange(18001,20001,1).tolist()
-    # train_IDs = numpy.arange(1,27001,1).tolist()
-    # val_IDs = numpy.arange(27001,30001,1).tolist()
-    # train_IDs = numpy.arange(0,9000,1).tolist()
-    # val_IDs = numpy.arange(9000,10000,1).tolist()
-    # train_IDs = numpy.arange(1,9001,1).tolist()
-    # val_IDs = numpy.arange(9001,10001,1).tolist()
+    # Split train & val set
+    train_IDs = numpy.arange(1,1001,1).tolist()
+    val_IDs = numpy.arange(1001,1101).tolist()
 
     train_ds = decode.neuralfitter.dataset.rPSFDataset(root_dir=param.InOut.data_path,
                                                        list_IDs=train_IDs, label_path=None, 
@@ -329,7 +319,6 @@ def setup_trainer(logger, model_out, ckpt_path, device, param):
                                                        n_max=param.HyperParameter.max_number_targets,
                                                        tar_proc=tar_proc,
                                                        img_shape=param.Simulation.img_size)
-
     # print(test_ds.label_gen())
 
     """Set up post processor"""

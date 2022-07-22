@@ -1,4 +1,7 @@
 import time
+import os
+import scipy.io
+import numpy
 
 import torch
 from torch.utils.data import Dataset
@@ -363,20 +366,14 @@ class SMLMLiveSampleDataset(SMLMDataset):
         return self._return_sample(frames, target, weight, tar_emitter)
 
 
-import os
-import scipy.io
-import numpy
-
 class rPSFDataset(Dataset):
 
     def __init__(self, root_dir, list_IDs=None, label_path=None, n_max=100, tar_proc=None, img_shape=None):
-
         self.root_dir = root_dir
         self.list_IDs = list_IDs
         if self.list_IDs is None:
             self.list_IDs = [int(n.strip('im').strip('.mat')) for n in os.listdir(os.path.join(self.root_dir,'noise')) if 'im' in n]
             self.list_IDs.sort()
-            # print(self.list_IDs)
         # print(self.list_IDs)
         self.label_path = label_path if label_path is not None else os.path.join(root_dir,'label.txt')
         self.n_max = n_max
@@ -405,9 +402,9 @@ class rPSFDataset(Dataset):
 
         labels = torch.tensor(label_raw[:,[0,4,2,1,3]]).float()
 
-        labels[:,2] = labels[:,2] + self.img_shape[0]/2
-        labels[:,3] = labels[:,3] + self.img_shape[1]/2
-        # labels[:,4] = labels[:,4] + 20
+        labels[:,2] = labels[:,2] + self.img_shape[0]/2 #x
+        labels[:,3] = labels[:,3] + self.img_shape[1]/2 #y
+        # labels[:,4] = labels[:,4] + 20 #zeta
         # print(labels.shape)
 
         # for i in numpy.unique(label_raw[:,0]):
@@ -420,7 +417,7 @@ class rPSFDataset(Dataset):
         #     labels[i] =  labels[i][:,[4,1,2,3]]
 
         return labels
-    
+
     def label_raw(self):
         label_raw = numpy.loadtxt(self.label_path)
         return label_raw, self.label_path
@@ -452,10 +449,135 @@ class rPSFDataset(Dataset):
 
         if self.tar_proc is not None:
             # tar_emitter, bg_frame --> target = Tuple (param_tar, mask_tar, bg)
+            # tar_proc: scale with phot_max, bg_max, z_max
             target = self.tar_proc.forward(param_tar, mask_tar, bg)
             return target
 
         return param_tar, mask_tar, bg
+
+    def emitter(self):
+
+        xyz = self.tars[:,2:5]
+        frame_ix = self.tars[:,0].long()
+        phot = self.tars[:,1]
+        bg = torch.zeros([xyz.size(0),self.img_shape[0],self.img_shape[1]])
+        # print(xyz.shape,frame_ix.shape,phot.shape)
+
+        return EmitterSet(xyz=xyz.cpu(), frame_ix=frame_ix.cpu(), phot=phot.cpu(), bg=bg, xy_unit='px')
+
+    def __getitem__(self, index):
+        ID = self.list_IDs[index]
+
+        im_name = os.path.join(self.root_dir,'noise','im' + str(ID) + '.mat')
+        im_mat = scipy.io.loadmat(im_name)
+        im_numpy = numpy.float32(im_mat['g'])
+
+        # turn image into torch tensor with 1 channel
+        frame = torch.from_numpy(im_numpy).unsqueeze(0)
+
+        target =  self.tar_gen(index)
+        weight = None
+
+        return frame, target, weight
+
+
+class rPSFDataset_var2(Dataset):
+
+    def __init__(self, root_dir, list_IDs=None, label_path=None, n_max=100, tar_proc=None, img_shape=None):
+        self.root_dir = root_dir
+        self.list_IDs = list_IDs
+        if self.list_IDs is None:
+            self.list_IDs = [int(n.strip('im').strip('.mat')) for n in os.listdir(os.path.join(self.root_dir,'noise')) if 'im' in n]
+            self.list_IDs.sort()
+        # print(self.list_IDs)
+        self.label_path = label_path if label_path is not None else os.path.join(root_dir,'label.txt')
+        self.n_max = n_max
+        self.tar_proc = tar_proc
+        self.img_shape = img_shape
+        self.tars = self.label_gen()
+
+    def __len__(self):
+        return len(self.list_IDs)
+
+    def label_gen(self):
+
+        label_raw = numpy.loadtxt(self.label_path)
+        if label_raw.ndim < 2:
+            label_raw = numpy.expand_dims(label_raw, axis=0)
+
+        i_bol = numpy.zeros(label_raw.shape[0],dtype=numpy.int8)
+        for idx in self.list_IDs:
+            i_bol += label_raw[:,0] == idx
+
+        # print(i_bol)
+        label_raw = label_raw[i_bol>0,:]
+
+        # Initialize frame_ix
+        label_raw[:,0] = label_raw[:,0] - numpy.min(label_raw[:,0])
+
+        labels = torch.tensor(label_raw[:,[0,4,2,1,3]]).float()
+
+        labels[:,2] = labels[:,2] + self.img_shape[0]/2 #x
+        labels[:,3] = labels[:,3] + self.img_shape[1]/2 #y
+
+        return labels
+
+    def label_raw(self):
+        label_raw = numpy.loadtxt(self.label_path)
+        return label_raw, self.label_path
+
+    def tar_gen(self, idx):
+        """
+        Setup and compute parameter target (i.e. a matrix / tensor in which all params are concatenated).
+        """
+        n_frames = 1
+
+        param_tar = torch.zeros((n_frames, self.n_max, 4))
+        mask_tar = torch.zeros((n_frames, self.n_max)).bool()
+
+        # tar = self.tars[idx]
+        i_bol = self.tars[:,0] == idx
+        tar = self.tars[i_bol,1:]
+        n_emitter = len(tar)
+
+        if n_emitter > self.n_max:
+            raise ValueError(f"Number of actual emitters {n_emitter} exceeds number of max. emitters {self.n_max} for sample {idx}.")
+
+        mask_tar[0, :n_emitter] = 1
+        param_tar[0, :n_emitter, :] = tar
+        # bg = torch.zeros(self.img_shape)
+        bg = torch.ones(self.img_shape)*5
+
+        mask_tar1 = torch.zeros((n_frames, self.n_max)).bool()
+        mask_tar2 = torch.zeros((n_frames, self.n_max)).bool()
+
+        prob_map = torch.zeros(self.img_shape)
+        mask1_idx = 0
+        mask2_idx = 0
+        for pt_id in range(n_emitter):
+            x = tar[pt_id, 1]
+            y = tar[pt_id, 2]
+            prob_map[round(float(x)),round(float(y))] += 1
+
+            if prob_map[round(float(x)),round(float(y))] == 1:
+                mask_tar1[0,mask1_idx] = 1
+                mask1_idx += 1
+            else:
+                mask_tar2[0,mask2_idx] = 1
+                mask2_idx += 1
+
+        mask_tar1 = mask_tar1.squeeze()
+        mask_tar2 = mask_tar2.squeeze()
+        mask_tar = mask_tar.squeeze()
+        param_tar = param_tar.squeeze()
+
+        if self.tar_proc is not None:
+            # tar_emitter, bg_frame --> target = Tuple (param_tar, mask_tar, bg)
+            # tar_proc: scale with phot_max, bg_max, z_max
+            target = self.tar_proc.forward(param_tar, mask_tar1, mask_tar2, bg)
+            return target
+
+        return param_tar, mask_tar1, mask_tar2, bg
 
     def emitter(self):
 

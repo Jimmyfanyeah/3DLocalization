@@ -114,14 +114,18 @@ class LookUpPostProcessing(PostProcessing):
     """
     Simple post-processing in which we threshold the probability output (raw threshold) and then look-up the features
     in the respective channels.
-
     """
 
     def __init__(self, raw_th: float, xy_unit: str, px_size=None,
-                 pphotxyzbg_mapping: Union[list, tuple] = (0, 1, 2, 3, 4, -1),
-                 photxyz_sigma_mapping: Union[list, tuple, None] = (5, 6, 7, 8)):
-        """
+                pphotxyz_mapping: Union[list, tuple] = (0,1, 2,3, 4,5, 6,7, 8,9),
+                photxyz_sigma_mapping: Union[list, tuple, None] = (10,11, 12,13, 14,15, 16,17),
+                bg_mapping: Union[list, tuple] = (-1)):
 
+                # pphotxyz_mapping: Union[list, tuple] = (0,1,2, 3,4,5, 6,7,8, 9,10,11, 12,13,14),
+                # photxyz_sigma_mapping: Union[list, tuple, None] = (15,16,17, 18,19,20, 21,22,23, 24,25,26),
+                # bg_mapping: Union[list, tuple] = (-1)
+
+        """
         Args:
             raw_th: initial raw threshold
             xy_unit: xy unit unit
@@ -131,18 +135,18 @@ class LookUpPostProcessing(PostProcessing):
         super().__init__(xy_unit=xy_unit, px_size=px_size, return_format='batch-set')
 
         self.raw_th = raw_th
-        self.pphotxyzbg_mapping = pphotxyzbg_mapping
+        self.pphotxyz_mapping = pphotxyz_mapping
         self.photxyz_sigma_mapping = photxyz_sigma_mapping
+        self.bg_mapping = bg_mapping
 
-        assert len(self.pphotxyzbg_mapping) == 6, "Wrong length of mapping."
+        assert len(self.pphotxyz_mapping) == 10, f"Wrong length of mapping. should be 10, got {len(self.pphotxyz_mapping)}"
         if self.photxyz_sigma_mapping is not None:
-            assert len(self.photxyz_sigma_mapping) == 4, "Wrong length of sigma mapping."
+            assert len(self.photxyz_sigma_mapping) == 8, "Wrong length of sigma mapping."
 
     def _filter(self, detection) -> torch.BoolTensor:
         """
         Args:
             detection: any tensor that should be thresholded
-
         Returns:
             boolean with active px
         """
@@ -152,7 +156,6 @@ class LookUpPostProcessing(PostProcessing):
     @staticmethod
     def _lookup_features(features: torch.Tensor, active_px: torch.Tensor) -> tuple:
         """
-
         Args:
             features: size :math:`(N, C, H, W)`
             active_px: size :math:`(N, H, W)`
@@ -160,14 +163,16 @@ class LookUpPostProcessing(PostProcessing):
         Returns:
             torch.Tensor: batch-ix, size :math: `M`
             torch.Tensor: extracted features size :math:`(C, M)`
-
         """
 
-        assert features.dim() == 4
+        batch_size, nc, hh, ww = features.size()
+        features = features.reshape(batch_size,int(nc/2),2,hh,ww)
+
+        assert features.dim() == 5
         assert active_px.dim() == features.dim() - 1
 
-        batch_ix = active_px.nonzero(as_tuple=False)[:, 0]
-        features_active = features.permute(1, 0, 2, 3)[:, active_px]
+        batch_ix = active_px.nonzero(as_tuple=False)[:, 0] # before [:,0] is Nx4 = [batch_index, 3channel_index, x_index, y_index]
+        features_active = features.permute(1, 0, 2, 3,4)[:, active_px]
 
         return batch_ix, features_active
 
@@ -181,17 +186,17 @@ class LookUpPostProcessing(PostProcessing):
 
         Returns:
             EmitterSet
-
         """
+
         """Reorder features channel-wise."""
-        x_mapped = x[:, self.pphotxyzbg_mapping]
+        x_mapped = x[:, self.pphotxyz_mapping]
 
         """Filter"""
-        active_px = self._filter(x_mapped[:, 0])  # 0th ch. is detection channel
-        prob = x_mapped[:, 0][active_px]
+        active_px = self._filter(x_mapped[:, 0:2])  # 0th ch. is detection channel
+        prob = x_mapped[:, 0:2][active_px]
 
         """Look-Up in channels"""
-        frame_ix, features = self._lookup_features(x_mapped[:, 1:], active_px)
+        frame_ix, features = self._lookup_features(x_mapped[:, 2:], active_px)
         # print(frame_ix.shape)
 
         """Return EmitterSet"""
@@ -209,10 +214,11 @@ class LookUpPostProcessing(PostProcessing):
             xyz_sigma = None
             phot_sigma = None
 
+        # bg_mapped = x[:, self.bg_mapping]
+
         return EmitterSet(xyz=xyz.cpu(), frame_ix=frame_ix.cpu(), phot=features[0, :].cpu(),
                           xyz_sig=xyz_sigma, phot_sig=phot_sigma, bg_sig=None,
-                          bg=features[4, :].cpu() if features.size(0) == 5 else None,
-                          prob=prob.cpu(), xy_unit=self.xy_unit, px_size=self.px_size)
+                          bg=None, prob=prob.cpu(), xy_unit=self.xy_unit, px_size=self.px_size)
 
 
 class SpatialIntegration(LookUpPostProcessing):
@@ -224,9 +230,9 @@ class SpatialIntegration(LookUpPostProcessing):
     _split_th = 0.6
 
     def __init__(self, raw_th: float, xy_unit: str, px_size=None,
-                 pphotxyzbg_mapping: Union[list, tuple] = (0, 1, 2, 3, 4, -1),
-                 photxyz_sigma_mapping: Union[list, tuple, None] = (5, 6, 7, 8),
-                 p_aggregation: Union[str, Callable] = 'norm_sum'):
+                pphotxyz_mapping: Union[list, tuple] = (0,1, 2,3, 4,5, 6,7, 8,9),
+                photxyz_sigma_mapping: Union[list, tuple, None] = (10,11, 12,13, 14,15, 16,17),
+                p_aggregation: Union[str, Callable] = 'norm_sum'):
         """
         Args:
             raw_th: probability threshold from where detections are considered
@@ -237,13 +243,13 @@ class SpatialIntegration(LookUpPostProcessing):
             p_aggregation: aggreation method to aggregate probabilities. can be 'sum', 'max', 'norm_sum'
         """
         super().__init__(raw_th=raw_th, xy_unit=xy_unit, px_size=px_size,
-                         pphotxyzbg_mapping=pphotxyzbg_mapping,
+                         pphotxyz_mapping=pphotxyz_mapping,
                          photxyz_sigma_mapping=photxyz_sigma_mapping)
 
         self.p_aggregation = self.set_p_aggregation(p_aggregation)
 
     def forward(self, x: torch.Tensor) -> EmitterSet:
-        x[:, 0] = self._nms(x[:, 0], self.p_aggregation, self.raw_th, self._split_th)
+        x[:, 0:2] = self._nms(x[:, 0:2], self.p_aggregation, self.raw_th, self._split_th)
 
         return super().forward(x)
 
@@ -251,7 +257,6 @@ class SpatialIntegration(LookUpPostProcessing):
     def _nms(p: torch.Tensor, p_aggregation, raw_th, split_th) -> torch.Tensor:
         """
         Non-Maximum Suppresion
-
         Args:
             p:
         """
@@ -263,13 +268,14 @@ class SpatialIntegration(LookUpPostProcessing):
             p_clip = torch.where(p > raw_th, p, torch.zeros_like(p))[:, None]
 
             """localize maximum values within a 3x3 patch"""
-            pool = torch.nn.functional.max_pool2d(p_clip, 3, 1, padding=1)
+            pool = torch.nn.functional.max_pool3d(p_clip, kernel_size=(1,3,3), stride=1, padding=(0,1,1))
             max_mask1 = torch.eq(p[:, None], pool).float()
 
             """Add probability values from the 4 adjacent pixels"""
             diag = 0.  # 1/np.sqrt(2)
             filt = torch.tensor([[diag, 1., diag], [1, 1, 1], [diag, 1, diag]]).unsqueeze(0).unsqueeze(0).to(p.device)
-            conv = torch.nn.functional.conv2d(p[:, None], filt, padding=1)
+            conv = [torch.nn.functional.conv2d(p[:, None, idx], filt, padding=1) for idx in range(p.shape[1])]
+            conv = torch.cat(conv,dim=1)[:,None]
             p_ps1 = max_mask1 * conv
 
             """

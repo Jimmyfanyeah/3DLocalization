@@ -16,7 +16,8 @@ def train(model, optimizer, loss, dataloader, grad_rescale, grad_mod, epoch, dev
     tqdm_enum = tqdm(dataloader, total=len(dataloader), smoothing=0.,ncols=100)  # progress bar enumeration
     t0 = time.time()
     loss_epoch = MetricMeter()
-    loss_gmm_epoch = MetricMeter()
+    loss_loc_epoch = MetricMeter()
+    loss_prob_epoch = MetricMeter()
     loss_bg_epoch = MetricMeter()
 
     """Actual Training"""
@@ -54,26 +55,26 @@ def train(model, optimizer, loss, dataloader, grad_rescale, grad_mod, epoch, dev
 
         """Logging"""
         loss_mean, loss_cmp = loss.log(loss_val)  # compute individual loss components
-        loss_gmm = loss_cmp['gmm']
-        loss_bg = loss_cmp['bg']
+        loss_prob = loss_cmp['ch1_prob']
+        loss_loc = loss_cmp['ch2_loc']
+        loss_bg = loss_cmp['ch3_bg']
         del loss_val
         loss_epoch.update(loss_mean)
-        loss_gmm_epoch.update(loss_gmm)
+        loss_loc_epoch.update(loss_loc)
+        loss_prob_epoch.update(loss_prob)
         loss_bg_epoch.update(loss_bg)
-        tqdm_enum.set_description(f"{epoch} Train Time:{t_batch:.2} Loss:{loss_mean:.3}")
 
+        tqdm_enum.set_description(f"{epoch} Train Time:{t_batch:.2} Loss_mean_ep:{loss_epoch.mean:.3}")
         # t0 = time.time()
-
+    print(f"\nEpoch {epoch} Train Time:{t_batch:.2} Loss_mean_ep:{loss_epoch.mean:.3}")
     # log_train_val_progress.log_train(loss_p_batch=loss_epoch.vals, loss_mean=loss_epoch.mean, logger=logger, step=epoch)
 
-    log_train_val_progress.log_train(loss_p_batch=loss_epoch.vals, loss_mean=loss_epoch.mean, logger=logger, step=epoch,loss_gmm_mean=loss_gmm_epoch.mean,loss_bg_mean=loss_bg_epoch.mean)
+    log_train_val_progress.log_train(loss_p_batch=loss_epoch.vals, loss_mean=loss_epoch.mean, logger=logger, step=epoch,loss_prob_mean=loss_prob_epoch.mean, loss_loc_mean=loss_loc_epoch.mean, loss_bg_mean=loss_bg_epoch.mean)
 
     return loss_epoch.mean
 
 
 _val_return = namedtuple("network_output", ["loss", "x", "y_out", "y_tar", "weight", "em_tar"])
-
-
 def test(model, loss, dataloader, epoch, device):
 
     """Setup"""
@@ -81,7 +82,7 @@ def test(model, loss, dataloader, epoch, device):
     loss_cmp_ep = []
 
     model.eval()
-    tqdm_enum = tqdm(dataloader, total=len(dataloader), smoothing=0.,ncols=80)  # progress bar enumeration
+    tqdm_enum = tqdm(dataloader, total=len(dataloader), smoothing=0.,ncols=80, position=0)  # progress bar enumeration
 
     t0 = time.time()
 
@@ -94,16 +95,8 @@ def test(model, loss, dataloader, epoch, device):
             # print(f'y_tar:\n{y_tar[0]}')
             # print(f'x:{x.shape}\n{x[0,:]}')
 
-            """
-            Forward the data.
-            """
+            """Forward the data"""
             y_out = model(x)
-
-            # print(f'y_out.shape={y_out.shape}')
-            # print(f'y_tar[0].shape={y_tar[0].shape}')
-            # print(f'y_tar[1].shape={y_tar[1].shape}')
-            # print(f'y_tar[2].shape={y_tar[2].shape}')
-
             loss_val = loss(y_out, y_tar, weight)
 
             t_batch = time.time() - t0
@@ -111,14 +104,14 @@ def test(model, loss, dataloader, epoch, device):
             loss_cmp_ep.append(loss_val.detach().cpu())
 
             """Logging and temporary save"""
-            tqdm_enum.set_description(f"{epoch} Test time:{t_batch:.2}")
+            tqdm_enum.set_description(f"{epoch} Test Time:{t_batch:.2} Loss_mean_ep:{ torch.cat(loss_cmp_ep, 0).mean():.3}")
 
             x_ep.append(x.cpu())
             y_out_ep.append(y_out.detach().cpu())
+        print(f"Epoch {epoch} Test Time:{t_batch:.2} Loss_mean_ep:{ torch.cat(loss_cmp_ep, 0).mean():.3}")
 
     """Epoch-Wise Merging"""
     loss_cmp_ep = torch.cat(loss_cmp_ep, 0)
-    print(f'Loss:{loss_cmp_ep.mean():.3}')
     x_ep = torch.cat(x_ep, 0)
     y_out_ep = torch.cat(y_out_ep, 0)
 

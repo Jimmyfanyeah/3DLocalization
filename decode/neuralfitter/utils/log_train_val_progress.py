@@ -89,6 +89,8 @@ def log_frames(x, y_out, y_tar, weight, em_out, em_tar, tp, tp_match, logger, st
     # plt.xlabel('prob')
     # logger.add_figure('output_dist/prob_log', f_prob_dist_log)
 
+    return True
+
 
 def log_kpi_simplified(loss_scalar: float, loss_cmp: dict, logger, step):
 
@@ -99,10 +101,7 @@ def log_kpi_simplified(loss_scalar: float, loss_cmp: dict, logger, step):
         logger.add_scalar('loss_cmp/test_ep_loss_ch_' + str(i), loss_cmp[:, i].mean(), step)
 
 
-
-
 def log_kpi(loss_scalar: float, loss_cmp: dict, eval_set: dict, logger, step):
-
     logger.add_scalar('learning/test_ep', loss_scalar, step)
 
     assert loss_cmp.dim() >= 2
@@ -136,17 +135,17 @@ def log_dists(tp, tp_match, pred, px_border, px_size, logger, step):
     logger.add_figure('dist/prob', f_prob, step)
 
 
-def log_train(*, loss_p_batch:(list, tuple), loss_mean:float, logger, step:int, loss_gmm_mean:float, loss_bg_mean:float):
+def log_train(*, loss_p_batch:(list, tuple), loss_mean:float, logger, step:int, loss_prob_mean:float, loss_loc_mean:float, loss_bg_mean:float):
 
     logger.add_scalar('learning/train_ep', loss_mean, step)
-    logger.add_scalar('learning/train_gmm', loss_gmm_mean, step)
+    logger.add_scalar('learning/train_prob', loss_prob_mean, step)
+    logger.add_scalar('learning/train_loc', loss_loc_mean, step)
     logger.add_scalar('learning/train_bg', loss_bg_mean, step)
 
     for i, loss_batch in enumerate(loss_p_batch):
         step_batch = step * len(loss_p_batch) + i
         if i % 10 != 0:
             continue
-
         logger.add_scalar('learning/train_batch', loss_batch, step_batch)
 
 
