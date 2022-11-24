@@ -39,8 +39,8 @@ for weight in "${weights[@]}"; do
                         --data_path='/home/ljdai2/scratch/scratch_rpsf/nonconvex_loss/data/gaussian_10k_pt50L5'  \
                         --save_path='/home/ljdai2/scratch/scratch_rpsf/nonconvex_loss/trained_model'  \
                         --port='123789'  \
-                        --weight='1_1'  \
-                        --extra_loss='mse3d_cel0'  \
+                        --weight='1_1_1_1'  \
+                        --extra_loss='mse3d_cel0_klnc_forward'  \
                         --cel0_mu=${weight}  \
                         --klnc_a=10 \
                         >> ${log_name}
