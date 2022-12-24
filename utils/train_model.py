@@ -25,6 +25,7 @@ def train_model(model,optimizer,scheduler,device,training_generator,validation_g
 
     # loss function
     loss_type = ['loss']
+    extra_weight = []
     if opt.extra_loss: # None or string
         extra_loss = opt.extra_loss.split('_')
         extra_weight = [float(n) for n in opt.weight.split('_')]

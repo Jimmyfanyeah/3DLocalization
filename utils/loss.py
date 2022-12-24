@@ -87,16 +87,25 @@ class CEL0Loss(nn.Module):
         self.norm_ai = scipy.io.loadmat(norm_ai_path)['norm_ai']
         self.norm_ai = torch.from_numpy(self.norm_ai).permute(2,0,1).to('cuda')
         self.weight = opt.cel0_mu
-        self.pool_info = (max(round(1/opt.pixel_size_axial),1),opt.upsampling_factor,opt.upsampling_factor) 
-        self.pool = nn.MaxPool3d(kernel_size=self.pool_info, stride=self.pool_info)
+
+        # MaxPool3D: from 255,192,192 => 41,96,96
+        # self.pool_info = (max(round(1/opt.pixel_size_axial),1),opt.upsampling_factor,opt.upsampling_factor) 
+        # self.pool = nn.MaxPool3d(kernel_size=self.pool_info, stride=self.pool_info)
+        # MaxPool2D: from 255,192,192 => 255,96,96
+        self.pool_info = (opt.upsampling_factor,opt.upsampling_factor)
+        self.pool = nn.MaxPool2d(kernel_size=self.pool_info, stride=self.pool_info)
+
 
     def forward(self,upgrid, target_bol=None, gt_im=None):
 
         # spikes_pred = upgrid
-        # before_maxpool = time.time()
-        spikes_pred = self.pool(upgrid.unsqueeze(1))*prod(self.pool_info)
-        spikes_pred = spikes_pred.squeeze(1)
-        # after_maxpool = time.time()
+
+        # for maxpool3d
+        # spikes_pred = self.pool(upgrid.unsqueeze(1))*prod(self.pool_info)
+        # spikes_pred = spikes_pred.squeeze(1)
+
+        # for maxpool2d
+        spikes_pred = self.pool(upgrid)*prod(self.pool_info)
 
         # CEL0 on the predicted spikes
         norm_ai2 = torch.square(self.norm_ai)
@@ -105,7 +114,6 @@ class CEL0Loss(nn.Module):
         bound = torch.square(abs_heat-thresh)
         ind = (abs_heat<=thresh).type(torch.float32)
         loss_spikes = torch.mean((self.weight-0.5*(norm_ai2*bound)*ind))
-        # after_loss = time.time()
         # print(f'max pool: {print_time(after_maxpool-before_maxpool)} loss cost: {print_time(after_loss-after_maxpool)}')
 
         return loss_spikes
