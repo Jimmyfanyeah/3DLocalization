@@ -22,6 +22,9 @@ from utils.test_model import test_model
 def learn_localization(rank,world_size,opt):
     opt.rank = rank
     opt.world_size = world_size
+    # print(opt.rank)
+    # print(opt.world_size)
+    # print(opt.gpu_number)
     init_DDP(opt)
 
     if opt.train_or_test == 'train':

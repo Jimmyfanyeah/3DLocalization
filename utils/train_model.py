@@ -135,7 +135,6 @@ def train_model(model,optimizer,scheduler,device,training_generator,validation_g
 
 
 
-
         """ validation """
         model.eval()
         metrics_val = defaultdict(float)
@@ -178,7 +177,6 @@ def train_model(model,optimizer,scheduler,device,training_generator,validation_g
         sum_last = (outputs.sum()/params_val['batch_size']).cpu().numpy()
         learning_results['val_max'].append(max_last)
         learning_results['val_sum'].append(sum_last)
-
 
 
         # visualize in tensorboard

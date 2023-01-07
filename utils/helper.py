@@ -13,6 +13,10 @@ def init_DDP(opt):
     os.environ['MASTER_PORT']=opt.port
     gpus = [g.strip() for g in opt.gpu_number.split(',')]
     os.environ['CUDA_VISIBLE_DEVICES']=gpus[opt.rank]
+    # print(torch.cuda.device_count())
+    # print(torch.cuda.is_available())
+    # print(opt.rank)
+    # print(opt.world_size)
     dist.init_process_group('GLOO',rank=opt.rank,world_size=opt.world_size)
 
 
