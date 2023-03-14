@@ -44,8 +44,10 @@ bash run_postpro.sh
 ```
 
 
-## Other info
+## Other information
+### Trained model
+* Download trained model [here](https://drive.google.com/drive/folders/1vni8rtQJxwLrOLnHHCzZLSc60LHvcq4I?usp=sharing).
+
 * [ReadME template](https://gist.github.com/DomPizzie/7a5ff55ffa9081f2de27c315f5018afc)
 
 
-<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=default"></script>
